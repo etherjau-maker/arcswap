@@ -12,5 +12,8 @@ const ARCSWAP_CONFIG = {
   tokens: [
     { symbol: "ARCT", name: "ArcSwap Token", address: "0x4820CED1A913355bCE255463123328A38CcAE78c", decimals: 18 },
     { symbol: "DEMO", name: "Demo Token", address: "0x46c789977EEfe78ae9E1fE419a75217503532a7b", decimals: 18 },
+    { symbol: "USDC", name: "USD Coin", address: "0x3600000000000000000000000000000000000000", decimals: 6 },
+    { symbol: "EURC", name: "Euro Coin", address: "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a", decimals: 6 },
+    { symbol: "cirBTC", name: "Circle Wrapped Bitcoin", address: "0xf0C4a4CE82A5746AbAAd9425360Ab04fbBA432BF", decimals: 8 },
   ],
 };
