@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ArcSwap — Settlement on Arc Testnet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0D0C;
+    --panel:#111513;
+    --line:#1E2622;
+    --text:#E9ECE9;
+    --text-dim:#8A948E;
+    --accent:#00E6A8;       /* settlement green — finality / confirmed */
+    --accent-dim:#00A87C;
+    --amber:#E8A33D;        /* pending / gas-in-USDC accent */
+    --mono:'IBM Plex Mono',monospace;
+    --sans:'Inter',sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    min-height:100vh;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:48px 48px;
+    background-position:center;
+  }
+  .wrap{
+    max-width:960px;
+    margin:0 auto;
+    padding:32px 20px 80px;
+  }
+
+  /* ---- Header: ledger strip ---- */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding-bottom:20px; border-bottom:1px solid var(--line);
+    margin-bottom:28px;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{
+    width:28px;height:28px;border:1.5px solid var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-size:13px;color:var(--accent);
+    transform:rotate(45deg);
+  }
+  .brand-mark span{transform:rotate(-45deg);}
+  .brand-name{font-family:var(--mono);font-weight:600;font-size:16px;letter-spacing:0.5px;}
+  .chain-status{
+    font-family:var(--mono); font-size:12px; color:var(--text-dim);
+    display:flex; align-items:center; gap:8px;
+  }
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 8px var(--accent); animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
+
+  /* ---- Ledger tape (signature element) ---- */
+  .tape{
+    border:1px solid var(--line);
+    background:var(--panel);
+    overflow:hidden;
+    margin-bottom:28px;
+    font-family:var(--mono);
+    font-size:12px;
+  }
+  .tape-label{
+    padding:8px 14px; color:var(--text-dim); font-size:10px;
+    letter-spacing:1.5px; text-transform:uppercase; border-bottom:1px solid var(--line);
+  }
+  .tape-row{
+    display:flex; justify-content:space-between; padding:9px 14px;
+    border-bottom:1px solid var(--line); color:var(--text-dim);
+  }
+  .tape-row:last-child{border-bottom:none;}
+  .tape-row .amt{color:var(--text);}
+  .tape-row .ok{color:var(--accent);}
+
+  /* ---- Swap card ---- */
+  .grid{display:grid; grid-template-columns:1.3fr 0.9fr; gap:20px;}
+  @media (max-width:720px){.grid{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    padding:24px;
+  }
+  .card h2{
+    font-family:var(--mono); font-size:13px; font-weight:600;
+    letter-spacing:1px; text-transform:uppercase; color:var(--text-dim);
+    margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .field{
+    border:1px solid var(--line); background:#0D110F;
+    padding:14px 16px; margin-bottom:10px;
+  }
+  .field-top{display:flex; justify-content:space-between; font-size:11px; color:var(--text-dim); margin-bottom:8px; font-family:var(--mono);}
+  .field-row{display:flex; align-items:center; gap:10px;}
+  .field input{
+    background:none; border:none; outline:none; color:var(--text);
+    font-family:var(--mono); font-size:22px; width:100%;
+  }
+  .field select{
+    background:#161B18; color:var(--text); border:1px solid var(--line);
+    font-family:var(--mono); font-size:13px; padding:8px 10px; cursor:pointer;
+  }
+  .swap-divider{
+    display:flex; align-items:center; justify-content:center; margin:2px 0;
+  }
+  .swap-divider button{
+    width:30px;height:30px; border:1px solid var(--line); background:var(--panel);
+    color:var(--accent); cursor:pointer; font-size:14px;
+  }
+  .rate-line{
+    font-family:var(--mono); font-size:11px; color:var(--text-dim);
+    display:flex; justify-content:space-between; margin:14px 0;
+    padding-top:12px; border-top:1px dashed var(--line);
+  }
+  .btn{
+    width:100%; padding:15px; border:none; cursor:pointer;
+    font-family:var(--mono); font-weight:600; font-size:13px; letter-spacing:1px;
+    text-transform:uppercase; background:var(--accent); color:#06110D;
+    transition:opacity .15s;
+  }
+  .btn:hover{opacity:0.88;}
+  .btn:disabled{background:var(--line); color:var(--text-dim); cursor:not-allowed;}
+  .btn-outline{
+    background:none; border:1px solid var(--accent); color:var(--accent);
+  }
+
+  /* ---- Side panel: pool / network info ---- */
+  .stat{
+    display:flex; justify-content:space-between; padding:10px 0;
+    border-bottom:1px solid var(--line); font-family:var(--mono); font-size:12px;
+  }
+  .stat:last-child{border-bottom:none;}
+  .stat .k{color:var(--text-dim);}
+  .stat .v{color:var(--text);}
+  .faucet-note{
+    margin-top:16px; font-size:11px; color:var(--text-dim); line-height:1.6;
+    font-family:var(--mono);
+  }
+  .faucet-note a{color:var(--accent); text-decoration:none;}
+
+  footer{
+    margin-top:40px; padding-top:20px; border-top:1px solid var(--line);
+    font-family:var(--mono); font-size:11px; color:var(--text-dim);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--panel); border:1px solid var(--accent); color:var(--text);
+    padding:12px 20px; font-family:var(--mono); font-size:12px;
+    display:none; z-index:99;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark"><span>A</span></div>
+      <div class="brand-name">ARCSWAP</div>
+    </div>
+    <div class="chain-status">
+      <span class="dot"></span>
+      <span id="netStatus">Arc Testnet · not connected</span>
+    </div>
+  </header>
+
+  <div class="tape">
+    <div class="tape-label">Settlement Ledger — sub-second finality</div>
+    <div id="ledgerRows">
+      <div class="tape-row"><span>Awaiting first swap...</span><span class="ok">—</span></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- Swap card -->
+    <div class="card">
+      <h2>Swap <span id="feeTag">0.30% fee</span></h2>
+
+      <div class="field">
+        <div class="field-top"><span>You pay</span><span id="balIn">Balance: —</span></div>
+        <div class="field-row">
+          <input id="amountIn" type="number" placeholder="0.0" min="0" step="any" />
+          <select id="tokenIn"></select>
+        </div>
+      </div>
+
+      <div class="swap-divider">
+        <button id="flipBtn" title="Flip direction">⇅</button>
+      </div>
+
+      <div class="field">
+        <div class="field-top"><span>You receive (est.)</span><span id="balOut">Balance: —</span></div>
+        <div class="field-row">
+          <input id="amountOut" type="number" placeholder="0.0" disabled />
+          <select id="tokenOut"></select>
+        </div>
+      </div>
+
+      <div class="rate-line">
+        <span id="rateInfo">1 ARCT = — DEMO</span>
+        <span id="slippageInfo">Slippage: 0.5%</span>
+      </div>
+
+      <button class="btn" id="actionBtn">Connect Wallet</button>
+    </div>
+
+    <!-- Side panel -->
+    <div class="card">
+      <h2>Pool</h2>
+      <div class="stat"><span class="k">Chain ID</span><span class="v">5042002</span></div>
+      <div class="stat"><span class="k">Gas token</span><span class="v">USDC</span></div>
+      <div class="stat"><span class="k">Reserve ARCT</span><span class="v" id="resA">—</span></div>
+      <div class="stat"><span class="k">Reserve DEMO</span><span class="v" id="resB">—</span></div>
+      <div class="stat"><span class="k">Your LP share</span><span class="v" id="lpShare">—</span></div>
+
+      <div class="faucet-note">
+        Need test tokens? Mint from the TestToken faucet (10,000 max per call)
+        directly in your wallet, or via
+        <a href="https://testnet.arcscan.app" target="_blank">ArcScan</a>.
+        Testnet USDC/EURC: <a href="https://faucet.circle.com" target="_blank">faucet.circle.com</a>.
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>ArcSwap · deployed on Arc Testnet</span>
+    <span id="contractsFoot">Factory / Router addresses set in config.js</span>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+<script src="./config.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
