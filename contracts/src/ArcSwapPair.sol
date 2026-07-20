@@ -193,11 +193,22 @@ contract ArcSwapPair is ERC20Min {
 
     /// @notice Swaps tokens. Caller must have already transferred the input token to this
     /// contract; this function sends `amount0Out`/`amount1Out` to `to`. Called by the Router.
+    /// @dev Split into helper functions to avoid "stack too deep" during compilation.
     function swap(uint256 amount0Out, uint256 amount1Out, address to) external lock {
         require(amount0Out > 0 || amount1Out > 0, "ArcSwap: INSUFFICIENT_OUTPUT_AMOUNT");
         (uint112 _reserve0, uint112 _reserve1,) = getReserves();
         require(amount0Out < _reserve0 && amount1Out < _reserve1, "ArcSwap: INSUFFICIENT_LIQUIDITY");
 
+        _swap(amount0Out, amount1Out, to, _reserve0, _reserve1);
+    }
+
+    function _swap(
+        uint256 amount0Out,
+        uint256 amount1Out,
+        address to,
+        uint112 _reserve0,
+        uint112 _reserve1
+    ) private {
         address _token0 = token0;
         address _token1 = token1;
         require(to != _token0 && to != _token1, "ArcSwap: INVALID_TO");
@@ -208,20 +219,43 @@ contract ArcSwapPair is ERC20Min {
         uint256 balance0 = IERC20(_token0).balanceOf(address(this));
         uint256 balance1 = IERC20(_token1).balanceOf(address(this));
 
+        _settle(balance0, balance1, amount0Out, amount1Out, _reserve0, _reserve1, to);
+    }
+
+    function _settle(
+        uint256 balance0,
+        uint256 balance1,
+        uint256 amount0Out,
+        uint256 amount1Out,
+        uint112 _reserve0,
+        uint112 _reserve1,
+        address to
+    ) private {
         uint256 amount0In = balance0 > _reserve0 - amount0Out ? balance0 - (_reserve0 - amount0Out) : 0;
         uint256 amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
         require(amount0In > 0 || amount1In > 0, "ArcSwap: INSUFFICIENT_INPUT_AMOUNT");
 
-        // 0.3% fee: adjusted balances must satisfy the constant-product invariant.
+        _checkK(balance0, balance1, amount0In, amount1In, _reserve0, _reserve1);
+
+        _update(balance0, balance1);
+        emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
+    }
+
+    /// @dev 0.3% fee: adjusted balances must satisfy the constant-product invariant.
+    function _checkK(
+        uint256 balance0,
+        uint256 balance1,
+        uint256 amount0In,
+        uint256 amount1In,
+        uint112 _reserve0,
+        uint112 _reserve1
+    ) private pure {
         uint256 balance0Adjusted = (balance0 * 1000) - (amount0In * 3);
         uint256 balance1Adjusted = (balance1 * 1000) - (amount1In * 3);
         require(
             balance0Adjusted * balance1Adjusted >= uint256(_reserve0) * uint256(_reserve1) * 1000 ** 2,
             "ArcSwap: K"
         );
-
-        _update(balance0, balance1);
-        emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
     }
 
     /// @notice Forces balances to match reserves, sending any excess to `to`.

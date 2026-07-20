@@ -40,7 +40,25 @@ contract ArcSwapRouter {
         address to,
         uint256 deadline
     ) external ensure(deadline) returns (uint256 amountA, uint256 amountB, uint256 liquidity) {
-        address pair = factory.getPair(tokenA, tokenB);
+        address pair;
+        (amountA, amountB, pair) = _addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin);
+
+        IERC20Router(tokenA).transferFrom(msg.sender, pair, amountA);
+        IERC20Router(tokenB).transferFrom(msg.sender, pair, amountB);
+        liquidity = ArcSwapPair(pair).mint(to);
+    }
+
+    /// @dev Computes the actual amounts to deposit, creating the pair if needed.
+    /// Split out of `addLiquidity` to avoid "stack too deep" during compilation.
+    function _addLiquidity(
+        address tokenA,
+        address tokenB,
+        uint256 amountADesired,
+        uint256 amountBDesired,
+        uint256 amountAMin,
+        uint256 amountBMin
+    ) private returns (uint256 amountA, uint256 amountB, address pair) {
+        pair = factory.getPair(tokenA, tokenB);
         if (pair == address(0)) {
             pair = factory.createPair(tokenA, tokenB);
         }
@@ -60,10 +78,6 @@ contract ArcSwapRouter {
                 (amountA, amountB) = (amountAOptimal, amountBDesired);
             }
         }
-
-        IERC20Router(tokenA).transferFrom(msg.sender, pair, amountA);
-        IERC20Router(tokenB).transferFrom(msg.sender, pair, amountB);
-        liquidity = ArcSwapPair(pair).mint(to);
     }
 
     function removeLiquidity(
