@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {ArcSwapPair} from "./ArcSwapPair.sol";
+import {CascadexPair} from "./CascadexPair.sol";
 
-/// @title ArcSwapFactory
-/// @notice Deploys and tracks one ArcSwapPair per unique token pair, using CREATE2 so pool
+/// @title CascadexFactory
+/// @notice Deploys and tracks one CascadexPair per unique token pair, using CREATE2 so pool
 /// addresses are deterministic and can be computed off-chain.
-contract ArcSwapFactory {
+contract CascadexFactory {
     mapping(address => mapping(address => address)) public getPair;
     address[] public allPairs;
 
@@ -24,14 +24,14 @@ contract ArcSwapFactory {
     }
 
     function createPair(address tokenA, address tokenB) external returns (address pair) {
-        require(tokenA != tokenB, "ArcSwap: IDENTICAL_ADDRESSES");
+        require(tokenA != tokenB, "Cascadex: IDENTICAL_ADDRESSES");
         (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        require(token0 != address(0), "ArcSwap: ZERO_ADDRESS");
-        require(getPair[token0][token1] == address(0), "ArcSwap: PAIR_EXISTS");
+        require(token0 != address(0), "Cascadex: ZERO_ADDRESS");
+        require(getPair[token0][token1] == address(0), "Cascadex: PAIR_EXISTS");
 
         bytes32 salt = keccak256(abi.encodePacked(token0, token1));
-        pair = address(new ArcSwapPair{salt: salt}());
-        ArcSwapPair(pair).initialize(token0, token1);
+        pair = address(new CascadexPair{salt: salt}());
+        CascadexPair(pair).initialize(token0, token1);
 
         getPair[token0][token1] = pair;
         getPair[token1][token0] = pair; // populate mapping in the reverse direction too
@@ -41,12 +41,12 @@ contract ArcSwapFactory {
     }
 
     function setFeeTo(address _feeTo) external {
-        require(msg.sender == feeToSetter, "ArcSwap: FORBIDDEN");
+        require(msg.sender == feeToSetter, "Cascadex: FORBIDDEN");
         feeTo = _feeTo;
     }
 
     function setFeeToSetter(address _feeToSetter) external {
-        require(msg.sender == feeToSetter, "ArcSwap: FORBIDDEN");
+        require(msg.sender == feeToSetter, "Cascadex: FORBIDDEN");
         feeToSetter = _feeToSetter;
     }
 }

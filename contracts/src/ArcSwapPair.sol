@@ -68,9 +68,9 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
-/// @title ArcSwapPair
+/// @title CascadexPair
 /// @notice Constant-product AMM pool (x * y = k) with a 0.3% swap fee, modeled on Uniswap V2.
-contract ArcSwapPair is ERC20Min {
+contract CascadexPair is ERC20Min {
     uint256 public constant MINIMUM_LIQUIDITY = 1000;
 
     address public immutable factory;
@@ -96,19 +96,19 @@ contract ArcSwapPair is ERC20Min {
     event Sync(uint112 reserve0, uint112 reserve1);
 
     modifier lock() {
-        require(unlocked == 1, "ArcSwap: LOCKED");
+        require(unlocked == 1, "Cascadex: LOCKED");
         unlocked = 0;
         _;
         unlocked = 1;
     }
 
-    constructor() ERC20Min("ArcSwap LP", "ARC-LP") {
+    constructor() ERC20Min("Cascadex LP", "ARC-LP") {
         factory = msg.sender;
     }
 
     /// @dev Called once by the factory at deployment time.
     function initialize(address _token0, address _token1) external {
-        require(msg.sender == factory, "ArcSwap: FORBIDDEN");
+        require(msg.sender == factory, "Cascadex: FORBIDDEN");
         token0 = _token0;
         token1 = _token1;
     }
@@ -120,7 +120,7 @@ contract ArcSwapPair is ERC20Min {
     }
 
     function _update(uint256 balance0, uint256 balance1) private {
-        require(balance0 <= type(uint112).max && balance1 <= type(uint112).max, "ArcSwap: OVERFLOW");
+        require(balance0 <= type(uint112).max && balance1 <= type(uint112).max, "Cascadex: OVERFLOW");
         reserve0 = uint112(balance0);
         reserve1 = uint112(balance1);
         blockTimestampLast = uint32(block.timestamp % 2 ** 32);
@@ -160,7 +160,7 @@ contract ArcSwapPair is ERC20Min {
         } else {
             liquidity = _min((amount0 * _totalSupply) / _reserve0, (amount1 * _totalSupply) / _reserve1);
         }
-        require(liquidity > 0, "ArcSwap: INSUFFICIENT_LIQUIDITY_MINTED");
+        require(liquidity > 0, "Cascadex: INSUFFICIENT_LIQUIDITY_MINTED");
         _mint(to, liquidity);
 
         _update(balance0, balance1);
@@ -179,7 +179,7 @@ contract ArcSwapPair is ERC20Min {
         uint256 _totalSupply = totalSupply;
         amount0 = (liquidity * balance0) / _totalSupply;
         amount1 = (liquidity * balance1) / _totalSupply;
-        require(amount0 > 0 && amount1 > 0, "ArcSwap: INSUFFICIENT_LIQUIDITY_BURNED");
+        require(amount0 > 0 && amount1 > 0, "Cascadex: INSUFFICIENT_LIQUIDITY_BURNED");
 
         _burn(address(this), liquidity);
         IERC20(_token0).transfer(to, amount0);
@@ -195,9 +195,9 @@ contract ArcSwapPair is ERC20Min {
     /// contract; this function sends `amount0Out`/`amount1Out` to `to`. Called by the Router.
     /// @dev Split into helper functions to avoid "stack too deep" during compilation.
     function swap(uint256 amount0Out, uint256 amount1Out, address to) external lock {
-        require(amount0Out > 0 || amount1Out > 0, "ArcSwap: INSUFFICIENT_OUTPUT_AMOUNT");
+        require(amount0Out > 0 || amount1Out > 0, "Cascadex: INSUFFICIENT_OUTPUT_AMOUNT");
         (uint112 _reserve0, uint112 _reserve1,) = getReserves();
-        require(amount0Out < _reserve0 && amount1Out < _reserve1, "ArcSwap: INSUFFICIENT_LIQUIDITY");
+        require(amount0Out < _reserve0 && amount1Out < _reserve1, "Cascadex: INSUFFICIENT_LIQUIDITY");
 
         _swap(amount0Out, amount1Out, to, _reserve0, _reserve1);
     }
@@ -211,7 +211,7 @@ contract ArcSwapPair is ERC20Min {
     ) private {
         address _token0 = token0;
         address _token1 = token1;
-        require(to != _token0 && to != _token1, "ArcSwap: INVALID_TO");
+        require(to != _token0 && to != _token1, "Cascadex: INVALID_TO");
 
         if (amount0Out > 0) IERC20(_token0).transfer(to, amount0Out);
         if (amount1Out > 0) IERC20(_token1).transfer(to, amount1Out);
@@ -233,7 +233,7 @@ contract ArcSwapPair is ERC20Min {
     ) private {
         uint256 amount0In = balance0 > _reserve0 - amount0Out ? balance0 - (_reserve0 - amount0Out) : 0;
         uint256 amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
-        require(amount0In > 0 || amount1In > 0, "ArcSwap: INSUFFICIENT_INPUT_AMOUNT");
+        require(amount0In > 0 || amount1In > 0, "Cascadex: INSUFFICIENT_INPUT_AMOUNT");
 
         _checkK(balance0, balance1, amount0In, amount1In, _reserve0, _reserve1);
 
@@ -254,7 +254,7 @@ contract ArcSwapPair is ERC20Min {
         uint256 balance1Adjusted = (balance1 * 1000) - (amount1In * 3);
         require(
             balance0Adjusted * balance1Adjusted >= uint256(_reserve0) * uint256(_reserve1) * 1000 ** 2,
-            "ArcSwap: K"
+            "Cascadex: K"
         );
     }
 

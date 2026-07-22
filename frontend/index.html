@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ArcSwap — Settlement on Arc Testnet</title>
+<title>Cascadex — Settlement on Arc Testnet</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -200,7 +200,7 @@
   <nav class="topbar">
     <div class="brand">
       <div class="brand-mark">A</div>
-      <div class="brand-name">ARCSWAP</div>
+      <div class="brand-name">CASCADEX</div>
     </div>
 
     <div class="tabs" id="tabBar">
@@ -293,9 +293,9 @@
 
   <div class="panel" id="panel-mint">
     <div class="card">
-      <h2>Mint <small>ArcSwap Badge · 1 per wallet · gas in USDC</small></h2>
+      <h2>Mint <small>Cascadex Badge · 1 per wallet · gas in USDC</small></h2>
       <div class="faucet-note" style="margin-top:0;">
-        Mint 1 NFT làm bằng chứng bạn đã tương tác với ArcSwap trên Arc Testnet.
+        Mint 1 NFT làm bằng chứng bạn đã tương tác với Cascadex trên Arc Testnet.
       </div>
       <button class="btn" id="mintBtn" style="margin-top:14px;">Connect Wallet &amp; Mint</button>
       <div class="status-line" id="mintStatus"></div>
@@ -303,7 +303,7 @@
   </div>
 
   <footer>
-    <span>ArcSwap · deployed on Arc Testnet</span>
+    <span>Cascadex · deployed on Arc Testnet</span>
     <span id="contractsFoot">Factory / Router addresses set in config.js</span>
   </footer>
 
@@ -443,8 +443,8 @@
     async function runMint(){
       mintBtn.disabled = true;
       try{
-        if(!window.ARCSWAP_NFT_ADDRESS){
-          setMintStatus("Chưa cấu hình ARCSWAP_NFT_ADDRESS trong config.js", "err");
+        if(!window.CASCADEX_NFT_ADDRESS){
+          setMintStatus("Chưa cấu hình CASCADEX_NFT_ADDRESS trong config.js", "err");
           return;
         }
         setMintStatus("Đang kết nối ví...", "pending");
@@ -455,7 +455,7 @@
         await window.ethereum.request({ method: "eth_requestAccounts" });
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
-        const nft = new ethers.Contract(window.ARCSWAP_NFT_ADDRESS, NFT_ABI, signer);
+        const nft = new ethers.Contract(window.CASCADEX_NFT_ADDRESS, NFT_ABI, signer);
 
         const balance = await nft.balanceOf(await signer.getAddress());
         if(balance > 0n){

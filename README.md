@@ -1,4 +1,4 @@
-# ArcSwap — DEX trên Arc Testnet
+# Cascadex — DEX trên Arc Testnet
 
 Constant-product AMM (kiểu Uniswap V2, phí 0.3%) deploy trên **Arc Testnet**
 (Circle's stablecoin-native L1), kèm frontend swap UI đơn giản (không cần build step).
@@ -7,9 +7,9 @@ Constant-product AMM (kiểu Uniswap V2, phí 0.3%) deploy trên **Arc Testnet**
 arcswap/
 ├── contracts/
 │   ├── src/
-│   │   ├── ArcSwapFactory.sol   # tạo & track pools
-│   │   ├── ArcSwapPair.sol      # pool AMM (x*y=k) + LP token
-│   │   ├── ArcSwapRouter.sol    # addLiquidity / swap cho user
+│   │   ├── CascadexFactory.sol   # tạo & track pools
+│   │   ├── CascadexPair.sol      # pool AMM (x*y=k) + LP token
+│   │   ├── CascadexRouter.sol    # addLiquidity / swap cho user
 │   │   └── TestToken.sol        # ERC20 test token có faucet
 │   ├── script/Deploy.s.sol      # script deploy Foundry
 │   └── foundry.toml
@@ -40,14 +40,14 @@ cd arcswap/contracts
 
 export PRIVATE_KEY=0xYOUR_PRIVATE_KEY   # ví burner riêng, KHÔNG dùng ví chính
 
-forge script script/Deploy.s.sol:DeployArcSwap \
+forge script script/Deploy.s.sol:DeployCascadex \
   --rpc-url https://rpc.testnet.arc.network \
   --private-key $PRIVATE_KEY \
   --broadcast
 ```
 
 Script sẽ tự động:
-1. Deploy `ArcSwapFactory` + `ArcSwapRouter`
+1. Deploy `CascadexFactory` + `CascadexRouter`
 2. Deploy 2 test token: **ARCT** và **DEMO** (mint 1,000,000 mỗi loại cho deployer)
 3. Tạo pool ARCT/DEMO và seed 100,000 mỗi bên thanh khoản ban đầu
 
@@ -72,7 +72,7 @@ cd frontend && npx serve .
 ## 5. Verify contract trên ArcScan (để chứng minh source code, tăng uy tín Builder)
 
 ```bash
-forge verify-contract <FACTORY_ADDRESS> src/ArcSwapFactory.sol:ArcSwapFactory \
+forge verify-contract <FACTORY_ADDRESS> src/CascadexFactory.sol:CascadexFactory \
   --rpc-url https://rpc.testnet.arc.network \
   --verifier blockscout \
   --verifier-url https://testnet.arcscan.app/api

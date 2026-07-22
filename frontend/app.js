@@ -1,4 +1,4 @@
-// ArcSwap frontend logic — vanilla ethers.js, no build step required.
+// Cascadex frontend logic — vanilla ethers.js, no build step required.
 
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
@@ -25,15 +25,15 @@ const PAIR_ABI = [
 ];
 
 let provider, signer, userAddress;
-let tokenIn = ARCSWAP_CONFIG.tokens[0];
-let tokenOut = ARCSWAP_CONFIG.tokens[1];
+let tokenIn = CASCADEX_CONFIG.tokens[0];
+let tokenOut = CASCADEX_CONFIG.tokens[1];
 
 const $ = (id) => document.getElementById(id);
 
 function populateTokenSelects() {
   for (const sel of [$("tokenIn"), $("tokenOut")]) {
     sel.innerHTML = "";
-    for (const t of ARCSWAP_CONFIG.tokens) {
+    for (const t of CASCADEX_CONFIG.tokens) {
       const opt = document.createElement("option");
       opt.value = t.symbol;
       opt.textContent = t.symbol;
@@ -73,18 +73,18 @@ async function connectWallet() {
   try {
     await window.ethereum.request({
       method: "wallet_switchEthereumChain",
-      params: [{ chainId: ARCSWAP_CONFIG.chainIdHex }],
+      params: [{ chainId: CASCADEX_CONFIG.chainIdHex }],
     });
   } catch (switchErr) {
     if (switchErr.code === 4902) {
       await window.ethereum.request({
         method: "wallet_addEthereumChain",
         params: [{
-          chainId: ARCSWAP_CONFIG.chainIdHex,
+          chainId: CASCADEX_CONFIG.chainIdHex,
           chainName: "Arc Testnet",
           nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-          rpcUrls: [ARCSWAP_CONFIG.rpcUrl],
-          blockExplorerUrls: [ARCSWAP_CONFIG.explorerUrl],
+          rpcUrls: [CASCADEX_CONFIG.rpcUrl],
+          blockExplorerUrls: [CASCADEX_CONFIG.explorerUrl],
         }],
       });
     } else {
@@ -101,7 +101,7 @@ async function connectWallet() {
 }
 
 async function getReadProvider() {
-  return provider || new ethers.JsonRpcProvider(ARCSWAP_CONFIG.rpcUrl);
+  return provider || new ethers.JsonRpcProvider(CASCADEX_CONFIG.rpcUrl);
 }
 
 async function refreshBalances() {
@@ -124,7 +124,7 @@ async function refreshBalances() {
 async function refreshPool() {
   const p = await getReadProvider();
   try {
-    const factory = new ethers.Contract(ARCSWAP_CONFIG.factory, FACTORY_ABI, p);
+    const factory = new ethers.Contract(CASCADEX_CONFIG.factory, FACTORY_ABI, p);
     const pairAddr = await factory.getPair(tokenIn.address, tokenOut.address);
     if (pairAddr === ethers.ZeroAddress) {
       $("resA").textContent = "no pool";
@@ -164,7 +164,7 @@ async function quote() {
     return;
   }
   const p = await getReadProvider();
-  const router = new ethers.Contract(ARCSWAP_CONFIG.router, ROUTER_ABI, p);
+  const router = new ethers.Contract(CASCADEX_CONFIG.router, ROUTER_ABI, p);
   try {
     const amountIn = ethers.parseUnits(amtStr, tokenIn.decimals);
     const amounts = await router.getAmountsOut(amountIn, [tokenIn.address, tokenOut.address]);
@@ -191,16 +191,16 @@ async function doSwap() {
     const amountIn = ethers.parseUnits(amtStr, tokenIn.decimals);
     const tokenContract = new ethers.Contract(tokenIn.address, ERC20_ABI, signer);
 
-    const allowance = await tokenContract.allowance(userAddress, ARCSWAP_CONFIG.router);
+    const allowance = await tokenContract.allowance(userAddress, CASCADEX_CONFIG.router);
     if (allowance < amountIn) {
       btn.textContent = "Approving…";
-      const approveTx = await tokenContract.approve(ARCSWAP_CONFIG.router, ethers.MaxUint256);
+      const approveTx = await tokenContract.approve(CASCADEX_CONFIG.router, ethers.MaxUint256);
       addLedgerRow(`Approve ${tokenIn.symbol}`, false);
       await approveTx.wait();
     }
 
     btn.textContent = "Swapping…";
-    const router = new ethers.Contract(ARCSWAP_CONFIG.router, ROUTER_ABI, signer);
+    const router = new ethers.Contract(CASCADEX_CONFIG.router, ROUTER_ABI, signer);
     const amounts = await router.getAmountsOut(amountIn, [tokenIn.address, tokenOut.address]);
     const slippageBps = 50n; // 0.5%
     const minOut = (amounts[1] * (10000n - slippageBps)) / 10000n;
@@ -247,15 +247,15 @@ window.addEventListener("DOMContentLoaded", () => {
   $("amountIn").addEventListener("input", quote);
 
   $("tokenIn").addEventListener("change", (e) => {
-    tokenIn = ARCSWAP_CONFIG.tokens.find((t) => t.symbol === e.target.value);
+    tokenIn = CASCADEX_CONFIG.tokens.find((t) => t.symbol === e.target.value);
     refreshAll();
     quote();
   });
   $("tokenOut").addEventListener("change", (e) => {
-    tokenOut = ARCSWAP_CONFIG.tokens.find((t) => t.symbol === e.target.value);
+    tokenOut = CASCADEX_CONFIG.tokens.find((t) => t.symbol === e.target.value);
     refreshAll();
     quote();
   });
 
-  $("contractsFoot").textContent = `Router: ${ARCSWAP_CONFIG.router.slice(0, 10)}…`;
+  $("contractsFoot").textContent = `Router: ${CASCADEX_CONFIG.router.slice(0, 10)}…`;
 });
